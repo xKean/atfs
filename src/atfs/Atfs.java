@@ -1,67 +1,90 @@
 package atfs;
+
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 public class Atfs {
-    private static final String EMPTY_SET = "\u2205";
-    private static final String EPSILON = "\u03B5";
-    private static final String[] ALPHABET = {"a", "b"};  // Beispielalphabet
+
+    private static final String EPSILON = "\u03B5";   // Epsilon für leere Zeichenkette
+    private static final String EMPTY_SET = "\u2205"; // Symbol für leere Menge
+
+    public static Set<String> generateRegex(int maxDepth, String[] alphabet, int maxCount) {
+        Set<String> results = new LinkedHashSet<>();
+        if (maxDepth == 0) {
+            addBasicExpressions(results, alphabet);
+            return results;
+        }
+
+        Set<String> previousLayer = generateRegex(maxDepth - 1, alphabet, maxCount);
+        results.addAll(previousLayer);
+        
+        // Kombiniert Regular Expressions der vorherigen Ebene
+        for (String r1 : previousLayer) {
+            for (String r2 : previousLayer) {
+                if (results.size() >= maxCount) return results;
+
+                results.add(concatenate(r1, r2));
+                if (!r1.equals(r2)) { //Alternieren nur wenn ungleiche Zeichen weil a+a = a
+                    results.add(alternate(r1, r2));
+                }
+                results.add(applyKleeneStar(r1));
+            }
+        }
+        return results;
+    }
+
+    // Fügt die Basisausdrücke (epsilon und leere Menge) und Alphabet Symbole hinzu
+    private static void addBasicExpressions(Set<String> results, String[] alphabet) {
+        results.add(EPSILON);
+        results.add(EMPTY_SET);
+        for (String symbol : alphabet) {
+            results.add(symbol);
+        }
+    }
+
+    private static String concatenate(String r1, String r2) {
+        String left = needsParenthesesForConcat(r1) ? "(" + r1 + ")" : r1;
+        String right = needsParenthesesForConcat(r2) ? "(" + r2 + ")" : r2;
+        return left + "⋅" + right;
+    }
+
+    private static String alternate(String r1, String r2) {
+        return (needsParenthesesForAlt(r1) ? "(" + r1 + ")" : r1)
+        		+ "+" + 
+        		(needsParenthesesForAlt(r2) ? "(" + r2 + ")" : r2);
+    }
+
+    // Wendet den Kleene-Stern an wenn der Ausdruck noch keinen hat
+    private static String applyKleeneStar(String regex) {
+        return regex.endsWith("*") ? regex : regex + "*";
+    }
+
+    // Bestimmt, ob Klammern für die Konkatenation notwendig sind
+    private static boolean needsParenthesesForConcat(String regex) {
+        return regex.contains("+") || (regex.contains("⋅") && !isSimpleConcat(regex));
+    }
+
+    // Wir brauchen nur Klammern wenn ein Term bereits eine Alternierung hat
+    private static boolean needsParenthesesForAlt(String regex) {
+        return regex.contains("+");
+    }
+
+    // Überprüft, ob es sich um eine einfache Konkatenation handelt (nur ein Punktzeichen)
+    private static boolean isSimpleConcat(String regex) {
+        int dotCount = 0;
+        for (char c : regex.toCharArray()) {
+            if (c == '⋅') dotCount++;
+            if (dotCount > 1) return false;
+        }
+        return dotCount == 1;
+    }
 
     public static void main(String[] args) {
-        int maxExpressions = 100;  // Maximale Anzahl an Ausdrücken, die generiert werden sollen
-        Set<String> generatedExpressions = generateRegExps(maxExpressions);
-        for (String expr : generatedExpressions) {
-            System.out.println(expr);
-        }
-    }
+        String[] alphabet = {"a", "b"};
+        int maxDepth = 2;
+        int maxCount = 100;
+        Set<String> regex = generateRegex(maxDepth, alphabet, maxCount);
 
-    public static Set<String> generateRegExps(int maxExpressions) {
-        Set<String> expressions = new LinkedHashSet<>();
-        expressions.add(EMPTY_SET);
-        expressions.add(EPSILON);
-        
-        // Hinzufügen von einfachen Zeichen aus dem Alphabet
-        for (String symbol : ALPHABET) {
-            expressions.add(symbol);
-        }
-        
-        // Generiere neue Ausdrücke bis zur gewünschten Anzahl
-        List<String> current = new LinkedList<>(expressions);
-        while (expressions.size() < maxExpressions) {
-            List<String> nextGeneration = new LinkedList<>();
-            
-            for (String exp1 : current) {
-                for (String exp2 : current) {
-                    // Konkatenation
-                    String concat = "(" + exp1 + exp2 + ")";
-                    // Vereinigung
-                    String union = "(" + exp1 + "+" + exp2 + ")";
-                    // Kleene-Stern für beide Ausdrücke
-                    String star1 = "(" + exp1 + ")*";
-                    String star2 = "(" + exp2 + ")*";
-                    
-                    // Hinzufügen, wenn nicht bereits vorhanden und Limit nicht erreicht
-                    addIfNotPresent(expressions, nextGeneration, concat, maxExpressions);
-                    addIfNotPresent(expressions, nextGeneration, union, maxExpressions);
-                    addIfNotPresent(expressions, nextGeneration, star1, maxExpressions);
-                    addIfNotPresent(expressions, nextGeneration, star2, maxExpressions);
-                    
-                    if (expressions.size() >= maxExpressions) break;
-                }
-                if (expressions.size() >= maxExpressions) break;
-            }
-            if (nextGeneration.isEmpty()) break;
-            current = nextGeneration;
-        }
-        
-        return expressions;
-    }
-
-    private static void addIfNotPresent(Set<String> expressions, List<String> nextGeneration, String newExpr, int maxExpressions) {
-        if (expressions.size() < maxExpressions && expressions.add(newExpr)) {
-            nextGeneration.add(newExpr);
-        }
+        regex.forEach(System.out::println);
     }
 }
