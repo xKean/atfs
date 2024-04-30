@@ -23,11 +23,13 @@ public class Atfs {
             for (String r2 : previousLayer) {
                 if (results.size() >= maxCount) return results;
 
+                
                 results.add(concatenate(r1, r2));
-                if (!r1.equals(r2)) { //Alternieren nur wenn ungleiche Zeichen weil a+a = a
-                    results.add(alternate(r1, r2));
-                }
+               // if (!r1.equals(r2)) { //Alternieren nur wenn ungleiche Zeichen weil a+a = a
+                results.add(alternate(r1, r2));
+               // }
                 results.add(applyKleeneStar(r1));
+                
             }
         }
         return results;
@@ -35,11 +37,14 @@ public class Atfs {
 
     // Fügt die Basisausdrücke (epsilon und leere Menge) und Alphabet Symbole hinzu
     private static void addBasicExpressions(Set<String> results, String[] alphabet) {
-        results.add(EPSILON);
+    	results.add(EPSILON);
         results.add(EMPTY_SET);
-        for (String symbol : alphabet) {
+        
+    	
+    	for (String symbol : alphabet) {
             results.add(symbol);
         }
+        
     }
 
     private static String concatenate(String r1, String r2) {
@@ -56,7 +61,11 @@ public class Atfs {
 
     // Wendet den Kleene-Stern an wenn der Ausdruck noch keinen hat
     private static String applyKleeneStar(String regex) {
-        return regex.endsWith("*") ? regex : regex + "*";
+    	if(regex.endsWith("*")||regex.length() > 2) {
+    		return "("+regex+")*";
+    	}else {
+    		return regex + "*";
+    	}
     }
 
     // Bestimmt, ob Klammern für die Konkatenation notwendig sind
@@ -81,10 +90,28 @@ public class Atfs {
 
     public static void main(String[] args) {
         String[] alphabet = {"a", "b"};
-        int maxDepth = 2;
-        int maxCount = 100;
+        int maxDepth = 3;
+        int maxCount = 10000;
         Set<String> regex = generateRegex(maxDepth, alphabet, maxCount);
 
         regex.forEach(System.out::println);
+        
+        System.out.println(indexOfSet(regex, "(a+b)*"));
+        
+        
     }
+
+    public static int indexOfSet(Set<String> set, String target) {
+        int index = 0;
+        for (String item : set) {
+            if (item.equals(target)) {
+                return index;
+            }
+            index++;
+        }
+        return -1; // Gibt -1 zurück, wenn das Element nicht im Set gefunden wurde
+    }
+
+    
+    
 }
