@@ -37,9 +37,9 @@ public class Atfs {
 
     // Fügt die Basisausdrücke (epsilon und leere Menge) und Alphabet Symbole hinzu
     private static void addBasicExpressions(Set<String> results, String[] alphabet) {
-    	results.add(EPSILON);
+    	
         results.add(EMPTY_SET);
-        
+        results.add(EPSILON);
     	
     	for (String symbol : alphabet) {
             results.add(symbol);
@@ -90,7 +90,7 @@ public class Atfs {
 
     public static void main(String[] args) {
         String[] alphabet = {"a", "b"};
-        int maxDepth = 3;
+        int maxDepth = 2;
         int maxCount = 10000;
         Set<String> regex = generateRegex(maxDepth, alphabet, maxCount);
 
