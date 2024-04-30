@@ -96,7 +96,7 @@ public class Atfs {
 
         regex.forEach(System.out::println);
         
-        System.out.println(indexOfSet(regex, "(a+b)*"));
+        System.out.println("Der Index der Inversen zu den ersten 7 ist: "indexOfSet(regex, "(a+b)*"));
         
         
     }
