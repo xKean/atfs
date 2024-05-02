@@ -72,9 +72,27 @@ public class Atfs {
         return regex.contains("+") || (regex.contains("⋅") && !isSimpleConcat(regex));
     }
 
-    // Wir brauchen nur Klammern wenn ein Term bereits eine Alternierung hat
+
     private static boolean needsParenthesesForAlt(String regex) {
-        return regex.contains("+");
+    	int klammerAuf = 0;
+    	int klammerZu = 0;
+    	
+    	boolean innerhalbKlammer = klammerAuf > klammerZu;
+    	
+        for (char c : regex.toCharArray()) {
+            if(c == '(') {
+            	klammerAuf++;
+            }
+            
+            if(c == '+' && innerhalbKlammer) {
+            	return true;
+            }
+            
+            if(c == ')') {
+            	klammerZu++;
+            }
+        }
+        return false;
     }
 
     // Überprüft, ob es sich um eine einfache Konkatenation handelt (nur ein Punktzeichen)
@@ -90,12 +108,12 @@ public class Atfs {
     public static void main(String[] args) {
         String[] alphabet = {"a", "b"};
         int maxDepth = 2;
-        int maxCount = 40;
+        int maxCount = 1000;
         Set<String> regex = generateRegex(maxDepth, alphabet, maxCount);
 
-        Object[] newlIst = regex.toArray();
-        for (int i = 0; i < newlIst.length; i+=2) {
-            System.out.println((i+1) + ": " + newlIst[i].toString() + " | " + (i+2) + ": " + newlIst[i + 1].toString());
+        Object[] newList = regex.toArray();
+        for (int i = 0; i < newList.length; i+=2) {
+            System.out.println((i+1) + ": " + newList[i].toString() + " | " + (i+2) + ": " + newList[i + 1].toString());
         }
 
         //regex.forEach(System.out::println);
